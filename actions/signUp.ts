@@ -19,7 +19,7 @@ export const signUp = async (formData: FormData) => {
   });
 
   if (error) {
-    throw new Error(error);
+    throw new Error("Could not authenticate user");
   }
   return redirect("/signUp/email");
 };
