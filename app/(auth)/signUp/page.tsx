@@ -24,10 +24,7 @@ export default function SignUp() {
         <div className="flex justify-center items-center mt-20">
             <form action={async (formData) => {
                 try {
-                    const response = await signUp(formData);
-
-                    toast.success("Check email to continue sign in process")
-
+                    await signUp(formData);
                 } catch (error: unknown) {
                     toast.error("User or password incorrect");
                 }

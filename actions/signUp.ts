@@ -22,5 +22,5 @@ export const signUp = async (formData: FormData) => {
     console.log(error);
   }
 
-  return true;
+  return redirect("/signUp/email");
 };
