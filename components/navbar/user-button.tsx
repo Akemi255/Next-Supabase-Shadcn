@@ -1,21 +1,18 @@
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "../ui/button";
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 import { CircleUser } from "lucide-react";
-
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Avatar, AvatarImage } from "../ui/avatar";
 
 const UserButton = async () => {
-
     const supabase = createClient();
     const { data: authData, error: authError } = await supabase.auth.getUser();
     const user = authData?.user;
@@ -31,9 +28,9 @@ const UserButton = async () => {
     }
 
     const { data: profileData, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
         .single();
 
     if (error) {
@@ -49,35 +46,35 @@ const UserButton = async () => {
     };
 
     return (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+        <Popover>
+            <PopoverTrigger asChild className="border-none">
                 <Button variant="secondary" size="icon" className="rounded-full">
-                    {profileData.avatar ?
-                        (<Avatar className="h-9 w-9">
+                    {profileData.avatar ? (
+                        <Avatar className="h-9 w-9">
                             <AvatarImage src={profileData.avatar} alt="Avatar" />
-                        </Avatar>)
-                        : (<CircleUser className="h-5 w-5" />)}
+                        </Avatar>
+                    ) : (
+                        <CircleUser className="h-5 w-5" />
+                    )}
                 </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="flex flex-col">
-                <DropdownMenuLabel>{user?.email}</DropdownMenuLabel>
-                <DropdownMenuItem>
-                    {user ? (<form action={signOut}>
-                        <Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-[200px]">
+                <div className="grid gap-4">
+                    <div className="space-y-2">
+                        <h4 className="font-medium leading-none">User Information</h4>
+                        <p className="text-sm text-muted-foreground">
+                            {user?.email}
+                        </p>
+                    </div>
+                    <div className="grid gap-2">
+                        <Button onClick={signOut}>
                             Logout
                         </Button>
-                    </form>) : (<Link
-                        href="/login"
-                        className=""
-                    >
-                        <Button>Login</Button>
-                    </Link>)}
+                    </div>
+                </div>
+            </PopoverContent>
+        </Popover>
+    );
+};
 
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
-    )
-}
-
-export default UserButton
-
+export default UserButton;
