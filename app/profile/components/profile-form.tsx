@@ -2,51 +2,51 @@
 
 import { useState } from 'react';
 import axios from 'axios';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import toast from 'react-hot-toast';
 
 import { Button } from "@/components/ui/button";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-import { Profile } from '@/interfaces/interfaces';
-import toast from 'react-hot-toast';
 import UploadImage from '@/components/file-upload';
+import { Profile } from '@/interfaces/interfaces';
+
+import * as z from 'zod';
 
 interface Props {
-    profileData: Profile
+    profileData: Profile;
 }
 
+const profileSchema = z.object({
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
+    avatar: z.string().optional(),
+});
+
+type ProfileFormValues = z.infer<typeof profileSchema>;
+
 const ProfileSection = ({ profileData }: Props) => {
-    const [firstName, setFirstName] = useState(profileData.first_name || '');
-    const [lastName, setLastName] = useState(profileData.last_name || '');
-    const [loading, setLoading] = useState(false);
-    const [profileImage, setProfileImage] = useState(profileData.avatar || '');
-
-    const handleFirstNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setFirstName(event.target.value);
-    }
-
-    const handleLastNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setLastName(event.target.value);
-    }
+    const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<ProfileFormValues>({
+        resolver: zodResolver(profileSchema),
+        defaultValues: {
+            firstName: profileData.first_name || '',
+            lastName: profileData.last_name || '',
+            avatar: profileData.avatar || '',
+        }
+    });
 
     const handleImageChange = (url: string) => {
-        setProfileImage(url);
-    }
+        setValue('avatar', url);
+    };
 
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        setLoading(true);
+    const onSubmit = async (data: ProfileFormValues) => {
         try {
             const response = await axios.patch('/api/profile', {
-                first_name: firstName,
-                last_name: lastName,
-                avatar: profileImage
+                first_name: data.firstName,
+                last_name: data.lastName,
+                avatar: data.avatar
             });
 
             if (response.status !== 200) {
@@ -57,10 +57,8 @@ const ProfileSection = ({ profileData }: Props) => {
         } catch (error) {
             console.error('Error updating profile:', error);
             toast.error("Failed to update profile");
-        } finally {
-            setLoading(false);
         }
-    }
+    };
 
     return (
         <Card className="sm:w-1/2 w-full">
@@ -68,23 +66,37 @@ const ProfileSection = ({ profileData }: Props) => {
                 <CardTitle>Update your profile</CardTitle>
             </CardHeader>
             <CardContent>
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit(onSubmit)}>
                     <div className="grid w-full items-center gap-4">
                         <div className="flex flex-col space-y-1.5">
                             <Label htmlFor="firstName">First Name</Label>
-                            <Input id="firstName" placeholder="First name" value={firstName} onChange={handleFirstNameChange} />
+                            <Input
+                                id="firstName"
+                                placeholder="First name"
+                                {...register('firstName')}
+                                disabled={isSubmitting}
+                            />
+                            {errors.firstName && <span className="text-red-500">{errors.firstName.message}</span>}
                         </div>
                         <div className="flex flex-col space-y-1.5">
                             <Label htmlFor="lastName">Last Name</Label>
-                            <Input id="lastName" placeholder="Last name" value={lastName} onChange={handleLastNameChange} />
+                            <Input
+                                id="lastName"
+                                placeholder="Last name"
+                                {...register('lastName')}
+                                disabled={isSubmitting}
+                            />
+                            {errors.lastName && <span className="text-red-500">{errors.lastName.message}</span>}
                         </div>
                         <UploadImage onChange={handleImageChange} />
                     </div>
-                    <Button disabled={loading} type="submit" className="flex justify-end mt-5">{loading ? "Loading..." : "Update"}</Button>
+                    <Button disabled={isSubmitting} type="submit" className="flex justify-end mt-5">
+                        {isSubmitting ? "Loading..." : "Update"}
+                    </Button>
                 </form>
             </CardContent>
         </Card>
-    )
+    );
 }
 
 export default ProfileSection;

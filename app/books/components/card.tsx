@@ -55,7 +55,8 @@ export function BookCard({ book, user }: BookCardProps) {
             <div className="flex justify-center">
                 <Button
                     disabled={loading}
-                    className="ml-1 mb-3 py-2 px-4 rounded-md transition duration-300 ease-in-out transform hover:scale-105" onClick={() => claimBook(book.id, user.id)}
+                    className="ml-1 mb-3 py-2 px-4 rounded-md transition duration-300 ease-in-out transform hover:scale-105"
+                    onClick={() => claimBook(book.id, user.id)}
                 >{loading ? 'Loading...' : 'Claim'}
                 </Button>
             </div>
