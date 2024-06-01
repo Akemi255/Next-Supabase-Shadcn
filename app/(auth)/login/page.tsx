@@ -1,4 +1,5 @@
-"use client"
+"use client";
+
 import {
   Card,
   CardContent,
@@ -12,33 +13,42 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 
 import Link from "next/link";
-
+import { useState } from "react";
+import toast from "react-hot-toast";
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { SubmitButton } from "../components/submit-button";
 import { signIn } from "@/actions/signIn";
-import toast from "react-hot-toast";
-
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { useState } from "react";
 
 export default function Login() {
-
   const supabase = createClientComponentClient();
   const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handlePasswordReset = async (event) => {
+  const handlePasswordReset = async (event: any) => {
     event.preventDefault();
+    setLoading(true);
     const email = event.target.email.value;
 
     try {
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'http://localhost:3000/update-password',
-      })
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.href}/update`,
+      });
 
-      toast.success("Password reset email sent!");
+      if (error) {
+        if (error.status === 429) {
+          toast.error("Too many requests. Please try again later.");
+        } else {
+          toast.error("Something went wrong");
+          console.error(error);
+        }
+      } else {
+        toast.success("Password reset email sent!");
+      }
     } catch (error) {
-      console.log(error);
-
+      console.error(error);
       toast.error("Failed to send password reset email.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -60,8 +70,8 @@ export default function Login() {
                 <Input id="email" name="email" type="email" placeholder="m@example.com" required />
               </div>
               <CardFooter>
-                <SubmitButton pendingText="Loading..." type="submit" className="w-full">
-                  Send Reset Link
+                <SubmitButton pendingText="Loading..." type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Loading" : "Send Reset Link"}
                 </SubmitButton>
               </CardFooter>
               <div className="mt-4 text-center text-sm">
